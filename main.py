@@ -1,5 +1,6 @@
 import dis
 import os
+import pathlib
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +9,12 @@ import cv2
 from PIL import Image
 import numpy as np
 import tensorflow.lite as lite
+#import tflite_runtime.interpreter as lite 
+
+#model_path = pathlib.Path("/static/model.tflite")
+
+
+    
 
 model = lite.Interpreter("static/model.tflite")
 model.allocate_tensors()
