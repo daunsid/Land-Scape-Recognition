@@ -5,8 +5,9 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from typing import List
-import cv2
-from PIL import Image
+import base64
+from io import BytesIO 
+import PIL
 import numpy as np
 import tensorflow.lite as lite
 #import tflite_runtime.interpreter as lite 
@@ -48,8 +49,7 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-def resize(image):
-    return cv2.resize(image, (150,150))
+
 
 @app.post('/uploadfiles', response_class=HTMLResponse)
 async def create_upload_files(files: List[UploadFile] = File(...)):
@@ -58,16 +58,17 @@ async def create_upload_files(files: List[UploadFile] = File(...)):
     for file in files:
         f = await file.read()
         images.append(f)
-
-    images = [np.frombuffer(img, np.uint8) for img in images]
-    images = [cv2.imdecode(img, cv2.IMREAD_COLOR) for img in images]
-    images_resized = [resize(img) for img in images]
-    images_rgb = [cv2.cvtColor(img, cv2.COLOR_BGR2RGB) for img in images_resized]
+    
+    
+    
+    images = [PIL.Image.open(BytesIO(img)) for img in images]
+    images_resized = [img.resize((150,150)) for img in images]
+    images_rgb = [np.asarray(img) for img in images_resized]
 
     names = [file.filename for file in files]
 
     for image, name in zip(images_rgb, names):
-        pillow_image = Image.fromarray(image)
+        pillow_image = PIL.Image.fromarray(image)
         pillow_image.save('static/'+name)
 
     images_paths = ['static/' + name for name in names]
